@@ -34,7 +34,7 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Listing not found"));
 
         // Business rule: guest cannot book their own listing
-        if (listing.getHostId().equals(guest.getId())) {
+        if (listing.getHost().getId().equals(guest.getId())) {
             throw new UnauthorizedException("You cannot book your own listing");
         }
 
@@ -56,7 +56,7 @@ public class BookingService {
 
         // Business rule: no overlapping PENDING or CONFIRMED bookings
         List<Booking> overlapping = bookingRepository
-                .findByListingIdAndStatusInAndCheckInBeforeAndCheckOutAfter(
+                .findByProperty_IdAndStatusInAndCheckInBeforeAndCheckOutAfter(
                         request.getListingId(),
                         Arrays.asList(BookingStatus.PENDING, BookingStatus.CONFIRMED),
                         request.getCheckOut(),
@@ -71,8 +71,8 @@ public class BookingService {
         double totalPrice = nights * listing.getPricePerNight();
 
         Booking booking = Booking.builder()
-                .guestId(guest.getId())
-                .listingId(request.getListingId())
+                .guest(guest)
+                .property(listing)
                 .checkIn(request.getCheckIn())
                 .checkOut(request.getCheckOut())
                 .totalPrice(totalPrice)
@@ -83,7 +83,7 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
 
         // Notify host
-        notificationService.createNotification(listing.getHostId(),
+        notificationService.createNotification(listing.getHost().getId(),
                 "New booking for \"" + listing.getTitle() + "\" from " + guest.getName() +
                 " (" + request.getCheckIn() + " to " + request.getCheckOut() + ")");
 
@@ -94,7 +94,7 @@ public class BookingService {
         User guest = userRepository.findByEmail(guestEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return bookingRepository.findByGuestId(guest.getId())
+        return bookingRepository.findByGuest_Id(guest.getId())
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -104,7 +104,7 @@ public class BookingService {
         User host = userRepository.findByEmail(hostEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        List<String> hostListingIds = propertyRepository.findByHostId(host.getId())
+        List<Long> hostListingIds = propertyRepository.findByHost_Id(host.getId())
                 .stream()
                 .map(Property::getId)
                 .collect(Collectors.toList());
@@ -113,13 +113,13 @@ public class BookingService {
             return List.of();
         }
 
-        return bookingRepository.findByListingIdIn(hostListingIds)
+        return bookingRepository.findByProperty_IdIn(hostListingIds)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public BookingResponse cancelBooking(String bookingId, String userEmail) {
+    public BookingResponse cancelBooking(Long bookingId, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -127,9 +127,9 @@ public class BookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
         // Both guest and host can cancel
-        Property listing = propertyRepository.findById(booking.getListingId()).orElse(null);
-        boolean isGuest = booking.getGuestId().equals(user.getId());
-        boolean isHost = listing != null && listing.getHostId().equals(user.getId());
+        Property listing = booking.getProperty();
+        boolean isGuest = booking.getGuest().getId().equals(user.getId());
+        boolean isHost = listing != null && listing.getHost().getId().equals(user.getId());
 
         if (!isGuest && !isHost) {
             throw new UnauthorizedException("You are not authorized to cancel this booking");
@@ -144,27 +144,26 @@ public class BookingService {
 
         // Notify the other party
         if (isGuest && listing != null) {
-            notificationService.createNotification(listing.getHostId(),
+            notificationService.createNotification(listing.getHost().getId(),
                     "Booking for \"" + listing.getTitle() + "\" has been cancelled by the guest.");
         } else {
-            notificationService.createNotification(booking.getGuestId(),
+            notificationService.createNotification(booking.getGuest().getId(),
                     "Your booking has been cancelled by the host.");
         }
 
         return mapToResponse(saved);
     }
 
-    public BookingResponse confirmBooking(String bookingId, String hostEmail) {
+    public BookingResponse confirmBooking(Long bookingId, String hostEmail) {
         User host = userRepository.findByEmail(hostEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
-        Property listing = propertyRepository.findById(booking.getListingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Listing not found"));
+        Property listing = booking.getProperty();
 
-        if (!listing.getHostId().equals(host.getId())) {
+        if (!listing.getHost().getId().equals(host.getId())) {
             throw new UnauthorizedException("Only the host can confirm this booking");
         }
 
@@ -175,23 +174,22 @@ public class BookingService {
         booking.setStatus(BookingStatus.CONFIRMED);
         Booking saved = bookingRepository.save(booking);
 
-        notificationService.createNotification(booking.getGuestId(),
+        notificationService.createNotification(booking.getGuest().getId(),
                 "Your booking for \"" + listing.getTitle() + "\" has been confirmed!");
 
         return mapToResponse(saved);
     }
 
-    public BookingResponse completeBooking(String bookingId, String hostEmail) {
+    public BookingResponse completeBooking(Long bookingId, String hostEmail) {
         User host = userRepository.findByEmail(hostEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
-        Property listing = propertyRepository.findById(booking.getListingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Listing not found"));
+        Property listing = booking.getProperty();
 
-        if (!listing.getHostId().equals(host.getId())) {
+        if (!listing.getHost().getId().equals(host.getId())) {
             throw new UnauthorizedException("Only the host can mark this booking as completed");
         }
 
@@ -202,7 +200,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
         Booking saved = bookingRepository.save(booking);
 
-        notificationService.createNotification(booking.getGuestId(),
+        notificationService.createNotification(booking.getGuest().getId(),
                 "Your stay at \"" + listing.getTitle() + "\" is now marked as completed. You can now leave a review!");
 
         return mapToResponse(saved);
@@ -225,25 +223,29 @@ public class BookingService {
     private BookingResponse mapToResponse(Booking booking) {
         String guestName = "Unknown";
         String guestEmail = "Unknown";
+        Long guestId = null;
+        Long listingId = null;
         String listingTitle = "Unknown";
 
-        User guest = userRepository.findById(booking.getGuestId()).orElse(null);
+        User guest = booking.getGuest();
         if (guest != null) {
+            guestId = guest.getId();
             guestName = guest.getName();
             guestEmail = guest.getEmail();
         }
 
-        Property listing = propertyRepository.findById(booking.getListingId()).orElse(null);
+        Property listing = booking.getProperty();
         if (listing != null) {
+            listingId = listing.getId();
             listingTitle = listing.getTitle();
         }
 
         return BookingResponse.builder()
                 .id(booking.getId())
-                .guestId(booking.getGuestId())
+                .guestId(guestId)
                 .guestName(guestName)
                 .guestEmail(guestEmail)
-                .listingId(booking.getListingId())
+                .listingId(listingId)
                 .listingTitle(listingTitle)
                 .checkIn(booking.getCheckIn())
                 .checkOut(booking.getCheckOut())

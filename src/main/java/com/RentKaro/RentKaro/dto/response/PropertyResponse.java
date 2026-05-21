@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PropertyResponse {
 
-    private String id;
+    private Long id;
     private String title;
     private String description;
     private Double pricePerNight;
@@ -28,7 +28,7 @@ public class PropertyResponse {
     private Integer numBathrooms;
     private List<String> amenities;
     private List<String> images;
-    private String hostId;
+    private Long hostId;
     private String hostEmail;
     private String hostName;
     private String approvalStatus;

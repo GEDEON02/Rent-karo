@@ -65,7 +65,7 @@ public class WebAdminController {
     }
 
     @PostMapping("/delete-user/{id}")
-    public String deleteUser(@PathVariable String id, RedirectAttributes ra) {
+    public String deleteUser(@PathVariable Long id, RedirectAttributes ra) {
         try {
             adminService.deleteUser(id);
             ra.addFlashAttribute("success", "User deleted.");
@@ -76,7 +76,7 @@ public class WebAdminController {
     }
 
     @PostMapping("/ban-user/{id}")
-    public String banUser(@PathVariable String id, RedirectAttributes ra) {
+    public String banUser(@PathVariable Long id, RedirectAttributes ra) {
         try {
             adminService.banUser(id);
             ra.addFlashAttribute("success", "User banned.");
@@ -87,7 +87,7 @@ public class WebAdminController {
     }
 
     @PostMapping("/unban-user/{id}")
-    public String unbanUser(@PathVariable String id, RedirectAttributes ra) {
+    public String unbanUser(@PathVariable Long id, RedirectAttributes ra) {
         try {
             adminService.unbanUser(id);
             ra.addFlashAttribute("success", "User unbanned.");
@@ -98,7 +98,7 @@ public class WebAdminController {
     }
 
     @PostMapping("/change-role/{id}")
-    public String changeRole(@PathVariable String id, @RequestParam(required = false) String role, RedirectAttributes ra) {
+    public String changeRole(@PathVariable Long id, @RequestParam(required = false) String role, RedirectAttributes ra) {
         try {
             if (role == null || role.isBlank()) {
                 ra.addFlashAttribute("error", "Please select a role.");
@@ -121,21 +121,21 @@ public class WebAdminController {
     }
 
     @PostMapping("/approve-property/{id}")
-    public String approveProperty(@PathVariable String id, RedirectAttributes ra) {
+    public String approveProperty(@PathVariable Long id, RedirectAttributes ra) {
         adminService.approveProperty(id);
         ra.addFlashAttribute("success", "Property approved!");
         return "redirect:/admin/listings";
     }
 
     @PostMapping("/reject-property/{id}")
-    public String rejectProperty(@PathVariable String id, RedirectAttributes ra) {
+    public String rejectProperty(@PathVariable Long id, RedirectAttributes ra) {
         adminService.rejectProperty(id);
         ra.addFlashAttribute("success", "Property rejected.");
         return "redirect:/admin/listings";
     }
 
     @PostMapping("/delete-property/{id}")
-    public String deleteProperty(@PathVariable String id, RedirectAttributes ra) {
+    public String deleteProperty(@PathVariable Long id, RedirectAttributes ra) {
         adminService.deleteProperty(id);
         ra.addFlashAttribute("success", "Property deleted.");
         return "redirect:/admin/listings";
@@ -150,7 +150,7 @@ public class WebAdminController {
     }
 
     @PostMapping("/cancel-booking/{id}")
-    public String cancelBooking(@PathVariable String id, Authentication auth, RedirectAttributes ra) {
+    public String cancelBooking(@PathVariable Long id, Authentication auth, RedirectAttributes ra) {
         try {
             // Admin can cancel any booking by using the service directly
             // For admin, we bypass the user check by setting up the booking directly
@@ -177,7 +177,7 @@ public class WebAdminController {
     }
 
     @PostMapping("/delete-review/{id}")
-    public String deleteReview(@PathVariable String id, Authentication auth, RedirectAttributes ra) {
+    public String deleteReview(@PathVariable Long id, Authentication auth, RedirectAttributes ra) {
         reviewService.deleteReview(id, auth.getName());
         ra.addFlashAttribute("success", "Review deleted.");
         return "redirect:/admin/reviews";

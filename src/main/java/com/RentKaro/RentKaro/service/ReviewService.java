@@ -25,7 +25,7 @@ public class ReviewService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
 
-    public ReviewResponse createReview(String listingId, ReviewRequest request, String guestEmail) {
+    public ReviewResponse createReview(Long listingId, ReviewRequest request, String guestEmail) {
         User guest = userRepository.findByEmail(guestEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -33,9 +33,9 @@ public class ReviewService {
                 .orElseThrow(() -> new ResourceNotFoundException("Listing not found"));
 
         // Business rule: guest can only review after a COMPLETED booking
-        List<Booking> completedBookings = bookingRepository.findByGuestId(guest.getId())
+        List<Booking> completedBookings = bookingRepository.findByGuest_Id(guest.getId())
                 .stream()
-                .filter(b -> b.getListingId().equals(listingId) && b.getStatus() == BookingStatus.COMPLETED)
+                .filter(b -> b.getProperty().getId().equals(listingId) && b.getStatus() == BookingStatus.COMPLETED)
                 .collect(Collectors.toList());
 
         if (completedBookings.isEmpty()) {
@@ -46,15 +46,15 @@ public class ReviewService {
         Booking booking = completedBookings.get(0);
 
         // Check if already reviewed this booking
-        List<Review> existingReviews = reviewRepository.findByBookingId(booking.getId());
+        List<Review> existingReviews = reviewRepository.findByBooking_Id(booking.getId());
         if (!existingReviews.isEmpty()) {
             throw new IllegalArgumentException("You have already reviewed this booking");
         }
 
         Review review = Review.builder()
-                .guestId(guest.getId())
-                .listingId(listingId)
-                .bookingId(booking.getId())
+                .guest(guest)
+                .property(listing)
+                .booking(booking)
                 .rating(request.getRating())
                 .comment(request.getComment())
                 .build();
@@ -63,14 +63,14 @@ public class ReviewService {
         return mapToResponse(saved);
     }
 
-    public List<ReviewResponse> getReviewsForListing(String listingId) {
-        return reviewRepository.findByListingId(listingId)
+    public List<ReviewResponse> getReviewsForListing(Long listingId) {
+        return reviewRepository.findByProperty_Id(listingId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public void deleteReview(String reviewId, String userEmail) {
+    public void deleteReview(Long reviewId, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -79,7 +79,7 @@ public class ReviewService {
 
         // Admin or the author can delete
         boolean isAdmin = user.getRole() == Role.ADMIN;
-        boolean isAuthor = review.getGuestId().equals(user.getId());
+        boolean isAuthor = review.getGuest().getId().equals(user.getId());
 
         if (!isAdmin && !isAuthor) {
             throw new UnauthorizedException("You are not authorized to delete this review");
@@ -95,8 +95,8 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    public double getAverageRating(String listingId) {
-        List<Review> reviews = reviewRepository.findByListingId(listingId);
+    public double getAverageRating(Long listingId) {
+        List<Review> reviews = reviewRepository.findByProperty_Id(listingId);
         if (reviews.isEmpty()) return 0.0;
         return reviews.stream()
                 .mapToInt(Review::getRating)
@@ -104,31 +104,31 @@ public class ReviewService {
                 .orElse(0.0);
     }
 
-    public int getReviewCount(String listingId) {
-        return reviewRepository.findByListingId(listingId).size();
+    public int getReviewCount(Long listingId) {
+        return reviewRepository.findByProperty_Id(listingId).size();
     }
 
     private ReviewResponse mapToResponse(Review review) {
         String guestName = "Unknown";
         String listingTitle = "Unknown";
 
-        User guest = userRepository.findById(review.getGuestId()).orElse(null);
+        User guest = review.getGuest();
         if (guest != null) {
             guestName = guest.getName();
         }
 
-        Property listing = propertyRepository.findById(review.getListingId()).orElse(null);
+        Property listing = review.getProperty();
         if (listing != null) {
             listingTitle = listing.getTitle();
         }
 
         return ReviewResponse.builder()
                 .id(review.getId())
-                .guestId(review.getGuestId())
+                .guestId(guest != null ? guest.getId() : null)
                 .guestName(guestName)
-                .listingId(review.getListingId())
+                .listingId(listing != null ? listing.getId() : null)
                 .listingTitle(listingTitle)
-                .bookingId(review.getBookingId())
+                .bookingId(review.getBooking() != null ? review.getBooking().getId() : null)
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .createdAt(review.getCreatedAt())

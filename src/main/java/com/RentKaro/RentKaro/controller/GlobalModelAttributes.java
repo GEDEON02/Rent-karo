@@ -39,7 +39,7 @@ public class GlobalModelAttributes {
     }
 
     @ModelAttribute("currentUserId")
-    public String currentUserId(Authentication authentication) {
+    public Long currentUserId(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal())) {
             return userRepository.findByEmail(authentication.getName())
@@ -55,7 +55,7 @@ public class GlobalModelAttributes {
             try {
                 User user = userRepository.findByEmail(authentication.getName()).orElse(null);
                 if (user != null) {
-                    return notificationRepository.countByUserIdAndIsReadFalse(user.getId());
+                    return notificationRepository.countByUser_IdAndIsReadFalse(user.getId());
                 }
             } catch (Exception ignored) {}
         }

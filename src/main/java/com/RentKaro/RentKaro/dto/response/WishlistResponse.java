@@ -14,6 +14,6 @@ import java.util.List;
 public class WishlistResponse {
 
     private String id;
-    private String guestId;
+    private Long guestId;
     private List<PropertyResponse> listings;
 }

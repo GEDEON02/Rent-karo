@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReviewResponse {
 
-    private String id;
-    private String guestId;
+    private Long id;
+    private Long guestId;
     private String guestName;
-    private String listingId;
+    private Long listingId;
     private String listingTitle;
-    private String bookingId;
+    private Long bookingId;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;

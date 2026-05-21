@@ -43,7 +43,7 @@ public class BookingController {
 
     @PutMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(
-            @PathVariable String id,
+            @PathVariable Long id,
             Authentication authentication) {
         BookingResponse response = bookingService.cancelBooking(id, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Booking cancelled", response));
@@ -51,7 +51,7 @@ public class BookingController {
 
     @PutMapping("/{id}/confirm")
     public ResponseEntity<ApiResponse<BookingResponse>> confirmBooking(
-            @PathVariable String id,
+            @PathVariable Long id,
             Authentication authentication) {
         BookingResponse response = bookingService.confirmBooking(id, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Booking confirmed", response));

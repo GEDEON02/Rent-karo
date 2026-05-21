@@ -1,19 +1,19 @@
 package com.RentKaro.RentKaro.repository;
 
 import com.RentKaro.RentKaro.model.Review;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface ReviewRepository extends MongoRepository<Review, String> {
+public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    List<Review> findByListingId(String listingId);
+    List<Review> findByProperty_Id(Long propertyId);
 
-    List<Review> findByGuestId(String guestId);
+    List<Review> findByGuest_Id(Long guestId);
 
-    List<Review> findByBookingId(String bookingId);
+    List<Review> findByBooking_Id(Long bookingId);
 
-    void deleteByListingId(String listingId);
+    void deleteByProperty_Id(Long propertyId);
 }

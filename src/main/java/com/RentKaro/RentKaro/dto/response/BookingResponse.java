@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class BookingResponse {
 
-    private String id;
-    private String guestId;
+    private Long id;
+    private Long guestId;
     private String guestName;
     private String guestEmail;
-    private String listingId;
+    private Long listingId;
     private String listingTitle;
     private LocalDate checkIn;
     private LocalDate checkOut;
