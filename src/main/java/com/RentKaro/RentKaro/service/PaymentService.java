@@ -5,7 +5,6 @@ import com.RentKaro.RentKaro.exception.ResourceNotFoundException;
 import com.RentKaro.RentKaro.model.*;
 import com.RentKaro.RentKaro.repository.BookingRepository;
 import com.RentKaro.RentKaro.repository.PaymentRepository;
-import com.RentKaro.RentKaro.repository.PropertyRepository;
 import com.RentKaro.RentKaro.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,26 +21,25 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
-    private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
     /**
      * Process 25% advance payment for a booking.
      */
-    public PaymentResponse processAdvancePayment(String bookingId, String paymentMethod, String userEmail) {
+    public PaymentResponse processAdvancePayment(Long bookingId, String paymentMethod, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
-        if (!booking.getGuestId().equals(user.getId())) {
+        if (!booking.getGuest().getId().equals(user.getId())) {
             throw new RuntimeException("You can only pay for your own bookings");
         }
 
         // Check if already paid
-        if (paymentRepository.findByBookingId(bookingId).isPresent()) {
+        if (paymentRepository.findByBooking_Id(bookingId).isPresent()) {
             throw new IllegalArgumentException("This booking has already been paid");
         }
 
@@ -50,7 +48,7 @@ public class PaymentService {
 
         // Simulate payment
         Payment payment = Payment.builder()
-                .bookingId(bookingId)
+                .booking(booking)
                 .amount(advanceAmount)
                 .paymentMethod(paymentMethod)
                 .status(PaymentStatus.PAID)
@@ -65,9 +63,9 @@ public class PaymentService {
         bookingRepository.save(booking);
 
         // Notify host
-        Property listing = propertyRepository.findById(booking.getListingId()).orElse(null);
+        Property listing = booking.getProperty();
         if (listing != null) {
-            notificationService.createNotification(listing.getHostId(),
+            notificationService.createNotification(listing.getHost().getId(),
                     "Advance payment of ₹" + String.format("%.0f", advanceAmount) +
                     " received for \"" + listing.getTitle() + "\" (Total: ₹" +
                     String.format("%.0f", booking.getTotalPrice()) + ")");
@@ -76,14 +74,14 @@ public class PaymentService {
         return mapToResponse(saved);
     }
 
-    public PaymentResponse processPayment(String bookingId, String userEmail) {
+    public PaymentResponse processPayment(Long bookingId, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
-        if (!booking.getGuestId().equals(user.getId())) {
+        if (!booking.getGuest().getId().equals(user.getId())) {
             throw new RuntimeException("You can only pay for your own bookings");
         }
 
@@ -92,13 +90,13 @@ public class PaymentService {
         }
 
         // Check if already paid
-        if (paymentRepository.findByBookingId(bookingId).isPresent()) {
+        if (paymentRepository.findByBooking_Id(bookingId).isPresent()) {
             throw new IllegalArgumentException("This booking has already been paid");
         }
 
         // Simulate payment
         Payment payment = Payment.builder()
-                .bookingId(bookingId)
+                .booking(booking)
                 .amount(booking.getTotalPrice())
                 .paymentMethod("MOCK_CARD")
                 .status(PaymentStatus.PAID)
@@ -113,23 +111,23 @@ public class PaymentService {
         bookingRepository.save(booking);
 
         // Notify host
-        Property listing = propertyRepository.findById(booking.getListingId()).orElse(null);
+        Property listing = booking.getProperty();
         if (listing != null) {
-            notificationService.createNotification(listing.getHostId(),
+            notificationService.createNotification(listing.getHost().getId(),
                     "Payment received for booking \"" + listing.getTitle() + "\" — ₹" + payment.getAmount());
         }
 
         return mapToResponse(saved);
     }
 
-    public PaymentResponse processRefund(String bookingId, String userEmail) {
+    public PaymentResponse processRefund(Long bookingId, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
-        Payment payment = paymentRepository.findByBookingId(bookingId)
+        Payment payment = paymentRepository.findByBooking_Id(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("No payment found for this booking"));
 
         if (payment.getStatus() != PaymentStatus.PAID) {
@@ -145,7 +143,7 @@ public class PaymentService {
         bookingRepository.save(booking);
 
         // Notify guest
-        notificationService.createNotification(booking.getGuestId(),
+        notificationService.createNotification(booking.getGuest().getId(),
                 "Your payment of ₹" + String.format("%.0f", payment.getAmount()) + " has been refunded.");
 
         return mapToResponse(saved);
@@ -161,7 +159,7 @@ public class PaymentService {
     private PaymentResponse mapToResponse(Payment payment) {
         return PaymentResponse.builder()
                 .id(payment.getId())
-                .bookingId(payment.getBookingId())
+                .bookingId(payment.getBooking().getId())
                 .amount(payment.getAmount())
                 .paymentMethod(payment.getPaymentMethod())
                 .status(payment.getStatus().name())

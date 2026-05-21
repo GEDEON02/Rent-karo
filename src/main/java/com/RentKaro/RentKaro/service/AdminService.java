@@ -30,29 +30,29 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    public void deleteUser(String userId) {
+    public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        propertyRepository.deleteByHostId(userId);
+        propertyRepository.deleteByHost_Id(userId);
         userRepository.delete(user);
     }
 
-    public UserResponse banUser(String userId) {
+    public UserResponse banUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setIsBanned(true);
         return mapToUserResponse(userRepository.save(user));
     }
 
-    public UserResponse unbanUser(String userId) {
+    public UserResponse unbanUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setIsBanned(false);
         return mapToUserResponse(userRepository.save(user));
     }
 
-    public UserResponse changeUserRole(String userId, Role newRole) {
+    public UserResponse changeUserRole(Long userId, Role newRole) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setRole(newRole);
@@ -68,7 +68,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    public PropertyResponse approveProperty(String propertyId) {
+    public PropertyResponse approveProperty(Long propertyId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
         property.setApprovalStatus(ApprovalStatus.APPROVED);
@@ -76,7 +76,7 @@ public class AdminService {
         return mapToPropertyResponse(saved);
     }
 
-    public PropertyResponse rejectProperty(String propertyId) {
+    public PropertyResponse rejectProperty(Long propertyId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
         property.setApprovalStatus(ApprovalStatus.REJECTED);
@@ -84,10 +84,10 @@ public class AdminService {
         return mapToPropertyResponse(saved);
     }
 
-    public void deleteProperty(String propertyId) {
+    public void deleteProperty(Long propertyId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        reviewRepository.deleteByListingId(propertyId);
+        reviewRepository.deleteByProperty_Id(propertyId);
         propertyRepository.delete(property);
     }
 
@@ -146,13 +146,15 @@ public class AdminService {
     private PropertyResponse mapToPropertyResponse(Property property) {
         String hostEmail = "Unknown";
         String hostName = "Unknown";
-        User host = userRepository.findById(property.getHostId()).orElse(null);
+        Long hostId = null;
+        User host = property.getHost();
         if (host != null) {
+            hostId = host.getId();
             hostEmail = host.getEmail();
             hostName = host.getName();
         }
 
-        List<Review> reviews = reviewRepository.findByListingId(property.getId());
+        List<Review> reviews = reviewRepository.findByProperty_Id(property.getId());
         double avgRating = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
 
         return PropertyResponse.builder()
@@ -168,7 +170,7 @@ public class AdminService {
                 .numBathrooms(property.getNumBathrooms())
                 .amenities(property.getAmenities())
                 .images(property.getImages())
-                .hostId(property.getHostId())
+                .hostId(hostId)
                 .hostEmail(hostEmail)
                 .hostName(hostName)
                 .approvalStatus(property.getApprovalStatus().name())

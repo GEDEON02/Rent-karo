@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NotificationResponse {
 
-    private String id;
-    private String userId;
+    private Long id;
+    private Long userId;
     private String message;
     private Boolean isRead;
     private LocalDateTime createdAt;

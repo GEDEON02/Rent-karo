@@ -5,6 +5,7 @@ import com.RentKaro.RentKaro.model.Property;
 import com.RentKaro.RentKaro.model.Review;
 import com.RentKaro.RentKaro.model.User;
 import com.RentKaro.RentKaro.model.Wishlist;
+import com.RentKaro.RentKaro.exception.ResourceNotFoundException;
 import com.RentKaro.RentKaro.repository.PropertyRepository;
 import com.RentKaro.RentKaro.repository.ReviewRepository;
 import com.RentKaro.RentKaro.repository.UserRepository;
@@ -13,11 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,66 +29,68 @@ public class WishlistService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
 
-    public boolean toggleWishlist(String email, String listingId) {
+    public boolean toggleWishlist(String email, Long listingId) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Wishlist wishlist = wishlistRepository.findByGuestId(user.getId())
-                .orElse(Wishlist.builder().guestId(user.getId()).listingIds(new ArrayList<>()).build());
+        Property property = propertyRepository.findById(listingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + listingId));
 
-        if (wishlist.getListingIds().contains(listingId)) {
-            wishlist.getListingIds().remove(listingId);
-            wishlistRepository.save(wishlist);
-            return false;
-        } else {
-            wishlist.getListingIds().add(listingId);
-            wishlistRepository.save(wishlist);
-            return true;
-        }
+        return wishlistRepository.findByGuest_IdAndProperty_Id(user.getId(), listingId)
+                .map(existing -> {
+                    wishlistRepository.delete(existing);
+                    return false;
+                })
+                .orElseGet(() -> {
+                    wishlistRepository.save(Wishlist.builder()
+                            .guest(user)
+                            .property(property)
+                            .build());
+                    return true;
+                });
+    }
+
+    public void removeFromWishlist(String email, Long listingId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        wishlistRepository.deleteByGuest_IdAndProperty_Id(user.getId(), listingId);
     }
 
     public List<PropertyResponse> getWishlist(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Wishlist wishlist = wishlistRepository.findByGuestId(user.getId()).orElse(null);
-        if (wishlist == null || wishlist.getListingIds().isEmpty()) {
-            return List.of();
-        }
-
-        return wishlist.getListingIds().stream()
-                .map(propertyRepository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return wishlistRepository.findByGuest_Id(user.getId()).stream()
+                .map(Wishlist::getProperty)
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public boolean isInWishlist(String email, String listingId) {
+    public boolean isInWishlist(String email, Long listingId) {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return false;
-        Wishlist wishlist = wishlistRepository.findByGuestId(user.getId()).orElse(null);
-        if (wishlist == null) return false;
-        return wishlist.getListingIds().contains(listingId);
+        return wishlistRepository.findByGuest_IdAndProperty_Id(user.getId(), listingId).isPresent();
     }
 
-    public Set<String> getWishlistIds(String email) {
+    public Set<Long> getWishlistIds(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return Collections.emptySet();
-        Wishlist wishlist = wishlistRepository.findByGuestId(user.getId()).orElse(null);
-        if (wishlist == null) return Collections.emptySet();
-        return new HashSet<>(wishlist.getListingIds());
+        return wishlistRepository.findByGuest_Id(user.getId()).stream()
+                .map(w -> w.getProperty().getId())
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     private PropertyResponse mapToResponse(Property property) {
         String hostEmail = "Unknown";
         String hostName = "Unknown";
-        User host = userRepository.findById(property.getHostId()).orElse(null);
+        Long hostId = null;
+        User host = property.getHost();
         if (host != null) {
+            hostId = host.getId();
             hostEmail = host.getEmail();
             hostName = host.getName();
         }
-        List<Review> reviews = reviewRepository.findByListingId(property.getId());
+        List<Review> reviews = reviewRepository.findByProperty_Id(property.getId());
         double avgRating = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
         return PropertyResponse.builder()
                 .id(property.getId()).title(property.getTitle()).description(property.getDescription())
@@ -97,7 +98,7 @@ public class WishlistService {
                 .city(property.getCity()).country(property.getCountry())
                 .maxGuests(property.getMaxGuests()).numBedrooms(property.getNumBedrooms()).numBathrooms(property.getNumBathrooms())
                 .amenities(property.getAmenities()).images(property.getImages())
-                .hostId(property.getHostId()).hostEmail(hostEmail).hostName(hostName)
+                .hostId(hostId).hostEmail(hostEmail).hostName(hostName)
                 .approvalStatus(property.getApprovalStatus().name())
                 .averageRating(Math.round(avgRating * 10.0) / 10.0).reviewCount(reviews.size())
                 .createdAt(property.getCreatedAt()).updatedAt(property.getUpdatedAt())

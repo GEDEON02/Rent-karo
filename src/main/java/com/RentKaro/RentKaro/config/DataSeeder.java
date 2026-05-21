@@ -115,7 +115,7 @@ public class DataSeeder implements CommandLineRunner {
                 .numBathrooms(3)
                 .amenities(Arrays.asList("WiFi", "Pool", "AC", "Kitchen", "Parking", "Beach Access", "BBQ Grill"))
                 .images(Arrays.asList("https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800", "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=800"))
-                .hostId(host1.getId())
+                .host(host1)
                 .approvalStatus(ApprovalStatus.APPROVED)
                 .build());
 
@@ -133,7 +133,7 @@ public class DataSeeder implements CommandLineRunner {
                 .numBathrooms(1)
                 .amenities(Arrays.asList("WiFi", "Fireplace", "Kitchen", "Mountain View", "Heating", "Garden"))
                 .images(Arrays.asList("https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800", "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800"))
-                .hostId(host1.getId())
+                .host(host1)
                 .approvalStatus(ApprovalStatus.APPROVED)
                 .build());
 
@@ -151,7 +151,7 @@ public class DataSeeder implements CommandLineRunner {
                 .numBathrooms(2)
                 .amenities(Arrays.asList("WiFi", "AC", "Gym", "Elevator", "City View", "24/7 Security"))
                 .images(Arrays.asList("https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800", "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"))
-                .hostId(host2.getId())
+                .host(host2)
                 .approvalStatus(ApprovalStatus.APPROVED)
                 .build());
 
@@ -169,7 +169,7 @@ public class DataSeeder implements CommandLineRunner {
                 .numBathrooms(2)
                 .amenities(Arrays.asList("WiFi", "AC", "Courtyard", "Rooftop", "Heritage", "Breakfast Included"))
                 .images(Arrays.asList("https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800", "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"))
-                .hostId(host2.getId())
+                .host(host2)
                 .approvalStatus(ApprovalStatus.APPROVED)
                 .build());
 
@@ -187,14 +187,14 @@ public class DataSeeder implements CommandLineRunner {
                 .numBathrooms(1)
                 .amenities(Arrays.asList("WiFi", "Nature View", "Breakfast Included", "Guided Walks", "Eco-Friendly"))
                 .images(Arrays.asList("https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800", "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800"))
-                .hostId(host1.getId())
+                .host(host1)
                 .approvalStatus(ApprovalStatus.PENDING)
                 .build());
 
         // ─── Sample Bookings ───
         Booking b1 = bookingRepository.save(Booking.builder()
-                .guestId(guest1.getId())
-                .listingId(l1.getId())
+                .guest(guest1)
+                .property(l1)
                 .checkIn(LocalDate.now().minusDays(10))
                 .checkOut(LocalDate.now().minusDays(5))
                 .totalPrice(5 * l1.getPricePerNight())
@@ -202,8 +202,8 @@ public class DataSeeder implements CommandLineRunner {
                 .build());
 
         Booking b2 = bookingRepository.save(Booking.builder()
-                .guestId(guest2.getId())
-                .listingId(l2.getId())
+                .guest(guest2)
+                .property(l2)
                 .checkIn(LocalDate.now().plusDays(5))
                 .checkOut(LocalDate.now().plusDays(10))
                 .totalPrice(5 * l2.getPricePerNight())
@@ -211,8 +211,8 @@ public class DataSeeder implements CommandLineRunner {
                 .build());
 
         Booking b3 = bookingRepository.save(Booking.builder()
-                .guestId(guest3.getId())
-                .listingId(l3.getId())
+                .guest(guest3)
+                .property(l3)
                 .checkIn(LocalDate.now().plusDays(2))
                 .checkOut(LocalDate.now().plusDays(4))
                 .totalPrice(2 * l3.getPricePerNight())
@@ -221,16 +221,16 @@ public class DataSeeder implements CommandLineRunner {
 
         // ─── Sample Reviews (for completed booking) ───
         reviewRepository.save(Review.builder()
-                .guestId(guest1.getId())
-                .listingId(l1.getId())
-                .bookingId(b1.getId())
+                .guest(guest1)
+                .property(l1)
+                .booking(b1)
                 .rating(5)
                 .comment("Absolutely stunning property! The beach access was amazing and the villa was spotless. Will definitely come back!")
                 .build());
 
         // ─── Sample Payments ───
         paymentRepository.save(Payment.builder()
-                .bookingId(b1.getId())
+                .booking(b1)
                 .amount(b1.getTotalPrice())
                 .paymentMethod("MOCK_CARD")
                 .status(PaymentStatus.PAID)
@@ -239,7 +239,7 @@ public class DataSeeder implements CommandLineRunner {
                 .build());
 
         paymentRepository.save(Payment.builder()
-                .bookingId(b2.getId())
+                .booking(b2)
                 .amount(b2.getTotalPrice())
                 .paymentMethod("MOCK_UPI")
                 .status(PaymentStatus.PAID)

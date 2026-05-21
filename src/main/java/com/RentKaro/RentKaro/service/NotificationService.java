@@ -20,9 +20,12 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    public void createNotification(String userId, String message) {
+    public void createNotification(Long userId, String message) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         Notification notification = Notification.builder()
-                .userId(userId)
+                .user(user)
                 .message(message)
                 .isRead(false)
                 .build();
@@ -33,20 +36,20 @@ public class NotificationService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
+        return notificationRepository.findByUser_IdOrderByCreatedAtDesc(user.getId())
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public NotificationResponse markAsRead(String notificationId, String email) {
+    public NotificationResponse markAsRead(Long notificationId, String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
 
-        if (!notification.getUserId().equals(user.getId())) {
+        if (!notification.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("You can only mark your own notifications as read");
         }
 
@@ -58,13 +61,13 @@ public class NotificationService {
     public long getUnreadCount(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        return notificationRepository.countByUserIdAndIsReadFalse(user.getId());
+        return notificationRepository.countByUser_IdAndIsReadFalse(user.getId());
     }
 
     private NotificationResponse mapToResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())
-                .userId(notification.getUserId())
+                .userId(notification.getUser().getId())
                 .message(notification.getMessage())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())

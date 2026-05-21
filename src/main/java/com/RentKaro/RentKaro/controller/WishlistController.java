@@ -20,7 +20,7 @@ public class WishlistController {
 
     @PostMapping("/{listingId}")
     public ResponseEntity<ApiResponse<String>> addToWishlist(
-            @PathVariable String listingId,
+            @PathVariable Long listingId,
             Authentication authentication) {
         boolean added = wishlistService.toggleWishlist(authentication.getName(), listingId);
         String message = added ? "Added to wishlist" : "Removed from wishlist";
@@ -29,10 +29,9 @@ public class WishlistController {
 
     @DeleteMapping("/{listingId}")
     public ResponseEntity<ApiResponse<String>> removeFromWishlist(
-            @PathVariable String listingId,
+            @PathVariable Long listingId,
             Authentication authentication) {
-        // Toggle will remove if present
-        wishlistService.toggleWishlist(authentication.getName(), listingId);
+        wishlistService.removeFromWishlist(authentication.getName(), listingId);
         return ResponseEntity.ok(ApiResponse.success("Removed from wishlist", "Removed from wishlist"));
     }
 

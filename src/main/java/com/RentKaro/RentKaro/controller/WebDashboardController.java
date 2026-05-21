@@ -163,7 +163,7 @@ public class WebDashboardController {
     }
 
     @PostMapping("/wishlist/toggle/{id}")
-    public String toggleWishlist(@PathVariable String id,
+    public String toggleWishlist(@PathVariable Long id,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes,
                                  @RequestParam(required = false) String returnUrl) {
@@ -190,7 +190,7 @@ public class WebDashboardController {
     }
 
     @PostMapping("/notifications/{id}/read")
-    public String markAsRead(@PathVariable String id,
+    public String markAsRead(@PathVariable Long id,
                              Authentication authentication,
                              RedirectAttributes redirectAttributes) {
         notificationService.markAsRead(id, authentication.getName());
@@ -214,7 +214,7 @@ public class WebDashboardController {
     // ═══════════════════════════════════════════
 
     @PostMapping("/cancel-booking/{id}")
-    public String cancelBooking(@PathVariable String id,
+    public String cancelBooking(@PathVariable Long id,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -227,7 +227,7 @@ public class WebDashboardController {
     }
 
     @PostMapping("/confirm-booking/{id}")
-    public String confirmBooking(@PathVariable String id,
+    public String confirmBooking(@PathVariable Long id,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         try {
@@ -240,7 +240,7 @@ public class WebDashboardController {
     }
 
     @PostMapping("/complete-booking/{id}")
-    public String completeBooking(@PathVariable String id,
+    public String completeBooking(@PathVariable Long id,
                                   Authentication authentication,
                                   RedirectAttributes redirectAttributes) {
         try {
@@ -323,7 +323,7 @@ public class WebDashboardController {
     }
 
     @GetMapping("/edit-property/{id}")
-    public String editPropertyPage(@PathVariable String id, Authentication authentication, Model model) {
+    public String editPropertyPage(@PathVariable Long id, Authentication authentication, Model model) {
         PropertyResponse property = propertyService.getPropertyById(id);
         model.addAttribute("property", property);
         return "edit-property";
@@ -331,7 +331,7 @@ public class WebDashboardController {
 
     @PostMapping("/edit-property/{id}")
     public String editProperty(
-            @PathVariable String id,
+            @PathVariable Long id,
             @RequestParam String title,
             @RequestParam String description,
             @RequestParam Double pricePerNight,
@@ -388,7 +388,7 @@ public class WebDashboardController {
 
     @PostMapping("/delete-property/{id}")
     public String deleteProperty(
-            @PathVariable String id,
+            @PathVariable Long id,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 

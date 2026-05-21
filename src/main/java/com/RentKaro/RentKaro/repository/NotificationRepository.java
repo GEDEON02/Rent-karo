@@ -1,17 +1,17 @@
 package com.RentKaro.RentKaro.repository;
 
 import com.RentKaro.RentKaro.model.Notification;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface NotificationRepository extends MongoRepository<Notification, String> {
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    List<Notification> findByUserIdOrderByCreatedAtDesc(String userId);
+    List<Notification> findByUser_IdOrderByCreatedAtDesc(Long userId);
 
-    List<Notification> findByUserIdAndIsReadFalse(String userId);
+    List<Notification> findByUser_IdAndIsReadFalse(Long userId);
 
-    long countByUserIdAndIsReadFalse(String userId);
+    long countByUser_IdAndIsReadFalse(Long userId);
 }

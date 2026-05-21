@@ -48,7 +48,7 @@ public class PropertyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PropertyResponse>> getPropertyById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<PropertyResponse>> getPropertyById(@PathVariable Long id) {
         PropertyResponse response = propertyService.getPropertyById(id);
         return ResponseEntity.ok(ApiResponse.success("Property retrieved", response));
     }
@@ -61,7 +61,7 @@ public class PropertyController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PropertyResponse>> updateProperty(
-            @PathVariable String id,
+            @PathVariable Long id,
             @Valid @RequestBody PropertyRequest request,
             Authentication authentication) {
         PropertyResponse response = propertyService.updateProperty(id, request, authentication.getName());
@@ -70,7 +70,7 @@ public class PropertyController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProperty(
-            @PathVariable String id,
+            @PathVariable Long id,
             Authentication authentication) {
         propertyService.deleteProperty(id, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Property deleted successfully"));

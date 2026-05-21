@@ -23,7 +23,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
 
 @Controller
 @RequiredArgsConstructor
@@ -88,7 +87,7 @@ public class WebHomeController {
     }
 
     @GetMapping("/properties/{id}")
-    public String propertyDetail(@PathVariable String id, Model model, Authentication authentication) {
+    public String propertyDetail(@PathVariable Long id, Model model, Authentication authentication) {
         PropertyResponse property = propertyService.getPropertyById(id);
         List<ReviewResponse> reviews = reviewService.getReviewsForListing(id);
         model.addAttribute("property", property);
@@ -121,7 +120,7 @@ public class WebHomeController {
      */
     @PostMapping("/properties/{id}/book")
     public String bookProperty(
-            @PathVariable String id,
+            @PathVariable Long id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
             @RequestParam(defaultValue = "1") Integer guests,
@@ -155,7 +154,7 @@ public class WebHomeController {
      */
     @PostMapping("/properties/{id}/review")
     public String submitReview(
-            @PathVariable String id,
+            @PathVariable Long id,
             @RequestParam Integer rating,
             @RequestParam String comment,
             Authentication authentication,

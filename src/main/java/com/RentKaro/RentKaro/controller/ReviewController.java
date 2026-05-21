@@ -21,7 +21,7 @@ public class ReviewController {
 
     @PostMapping("/api/listings/{id}/reviews")
     public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
-            @PathVariable String id,
+            @PathVariable Long id,
             @Valid @RequestBody ReviewRequest request,
             Authentication authentication) {
         ReviewResponse response = reviewService.createReview(id, request, authentication.getName());
@@ -30,14 +30,14 @@ public class ReviewController {
     }
 
     @GetMapping("/api/listings/{id}/reviews")
-    public ResponseEntity<ApiResponse<List<ReviewResponse>>> getListingReviews(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<List<ReviewResponse>>> getListingReviews(@PathVariable Long id) {
         List<ReviewResponse> reviews = reviewService.getReviewsForListing(id);
         return ResponseEntity.ok(ApiResponse.success("Reviews retrieved", reviews));
     }
 
     @DeleteMapping("/api/reviews/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
-            @PathVariable String id,
+            @PathVariable Long id,
             Authentication authentication) {
         reviewService.deleteReview(id, authentication.getName());
         return ResponseEntity.ok(ApiResponse.success("Review deleted"));

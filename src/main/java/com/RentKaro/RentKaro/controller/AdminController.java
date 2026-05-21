@@ -32,24 +32,24 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         adminService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully"));
     }
 
     @PutMapping("/users/{id}/ban")
-    public ResponseEntity<ApiResponse<UserResponse>> banUser(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<UserResponse>> banUser(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("User banned", adminService.banUser(id)));
     }
 
     @PutMapping("/users/{id}/unban")
-    public ResponseEntity<ApiResponse<UserResponse>> unbanUser(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<UserResponse>> unbanUser(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("User unbanned", adminService.unbanUser(id)));
     }
 
     @PutMapping("/users/{id}/role")
     public ResponseEntity<ApiResponse<UserResponse>> changeRole(
-            @PathVariable String id, @RequestParam String role) {
+            @PathVariable Long id, @RequestParam String role) {
         Role newRole = Role.valueOf(role.toUpperCase());
         return ResponseEntity.ok(ApiResponse.success("Role changed", adminService.changeUserRole(id, newRole)));
     }
@@ -62,17 +62,17 @@ public class AdminController {
     }
 
     @PutMapping("/properties/{id}/approve")
-    public ResponseEntity<ApiResponse<PropertyResponse>> approveProperty(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<PropertyResponse>> approveProperty(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Property approved", adminService.approveProperty(id)));
     }
 
     @PutMapping("/properties/{id}/reject")
-    public ResponseEntity<ApiResponse<PropertyResponse>> rejectProperty(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<PropertyResponse>> rejectProperty(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Property rejected", adminService.rejectProperty(id)));
     }
 
     @DeleteMapping("/properties/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteProperty(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteProperty(@PathVariable Long id) {
         adminService.deleteProperty(id);
         return ResponseEntity.ok(ApiResponse.success("Property deleted"));
     }

@@ -45,7 +45,7 @@ public class PropertyService {
                 .numBathrooms(request.getNumBathrooms())
                 .amenities(request.getAmenities() != null ? request.getAmenities() : new ArrayList<>())
                 .images(request.getImages() != null ? request.getImages() : new ArrayList<>())
-                .hostId(host.getId())
+                .host(host)
                 .approvalStatus(ApprovalStatus.PENDING)
                 .build();
 
@@ -77,7 +77,7 @@ public class PropertyService {
                 .collect(Collectors.toList());
     }
 
-    public PropertyResponse getPropertyById(String id) {
+    public PropertyResponse getPropertyById(Long id) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
         return mapToResponse(property);
@@ -87,20 +87,20 @@ public class PropertyService {
         User host = userRepository.findByEmail(hostEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return propertyRepository.findByHostId(host.getId())
+        return propertyRepository.findByHost_Id(host.getId())
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public PropertyResponse updateProperty(String id, PropertyRequest request, String hostEmail) {
+    public PropertyResponse updateProperty(Long id, PropertyRequest request, String hostEmail) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
 
         User host = userRepository.findByEmail(hostEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!property.getHostId().equals(host.getId())) {
+        if (!property.getHost().getId().equals(host.getId())) {
             throw new UnauthorizedException("You can only update your own properties");
         }
 
@@ -124,14 +124,14 @@ public class PropertyService {
         return mapToResponse(updated);
     }
 
-    public void deleteProperty(String id, String hostEmail) {
+    public void deleteProperty(Long id, String hostEmail) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id: " + id));
 
         User host = userRepository.findByEmail(hostEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!property.getHostId().equals(host.getId())) {
+        if (!property.getHost().getId().equals(host.getId())) {
             throw new UnauthorizedException("You can only delete your own properties");
         }
 
@@ -141,14 +141,16 @@ public class PropertyService {
     private PropertyResponse mapToResponse(Property property) {
         String hostEmail = "Unknown";
         String hostName = "Unknown";
+        Long hostId = null;
 
-        User host = userRepository.findById(property.getHostId()).orElse(null);
+        User host = property.getHost();
         if (host != null) {
+            hostId = host.getId();
             hostEmail = host.getEmail();
             hostName = host.getName();
         }
 
-        List<Review> reviews = reviewRepository.findByListingId(property.getId());
+        List<Review> reviews = reviewRepository.findByProperty_Id(property.getId());
         double avgRating = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
         int reviewCount = reviews.size();
 
@@ -167,7 +169,7 @@ public class PropertyService {
                 .numBathrooms(property.getNumBathrooms())
                 .amenities(property.getAmenities())
                 .images(property.getImages())
-                .hostId(property.getHostId())
+                .hostId(hostId)
                 .hostEmail(hostEmail)
                 .hostName(hostName)
                 .approvalStatus(property.getApprovalStatus().name())
