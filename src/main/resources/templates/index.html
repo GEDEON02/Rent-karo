@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Home')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero-section">
+    <div class="container hero-content text-white">
+        <div class="row justify-content-start">
+            <div class="col-lg-8">
+                <h1 class="hero-title mb-3 fade-in-up">
+                    Find Your<br>Perfect Stay
+                </h1>
+                <p class="hero-subtitle mb-4 fade-in-up-1">
+                    Discover unique homes, villas, and experiences across India.
+                </p>
+                <div class="hero-search fade-in-up-2">
+                    <form th:action="@{/properties}" method="get" class="d-flex w-100">
+                        <i class="bi bi-search" style="padding-left:1.2rem;display:flex;align-items:center;color:#717171;"></i>
+                        <input type="text" name="city" placeholder="Where are you going?">
+                        <button type="submit" class="hero-search-btn">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+                <div class="trust-badges mt-4 d-flex flex-wrap gap-2 fade-in-up-3">
+                    <span class="badge-pill"><i class="bi bi-shield-check"></i> Verified Hosts</span>
+                    <span class="badge-pill"><i class="bi bi-star-fill"></i> Top Rated</span>
+                    <span class="badge-pill"><i class="bi bi-lock-fill"></i> Secure Payments</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ POPULAR DESTINATIONS ═══ -->
+<section class="container py-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-heading mb-1">Popular Destinations</h2>
+            <div class="divider"></div>
+        </div>
+        <a th:href="@{/properties}" class="btn-rk-outline btn">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-3 col-6 fade-in-up">
+            <a th:href="@{/properties(city='Goa')}" class="dest-card text-decoration-none">
+                <img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&h=280&fit=crop" alt="Goa">
+                <div class="dest-card-body">
+                    <h6>Goa</h6>
+                    <small>Beaches &amp; Nightlife</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6 fade-in-up-1">
+            <a th:href="@{/properties(city='Manali')}" class="dest-card text-decoration-none">
+                <img src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=400&h=280&fit=crop" alt="Manali">
+                <div class="dest-card-body">
+                    <h6>Manali</h6>
+                    <small>Mountains &amp; Adventure</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6 fade-in-up-2">
+            <a th:href="@{/properties(city='Mumbai')}" class="dest-card text-decoration-none">
+                <img src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=400&h=280&fit=crop" alt="Mumbai">
+                <div class="dest-card-body">
+                    <h6>Mumbai</h6>
+                    <small>City &amp; Culture</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6 fade-in-up-3">
+            <a th:href="@{/properties(city='Jaipur')}" class="dest-card text-decoration-none">
+                <img src="https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&h=280&fit=crop" alt="Jaipur">
+                <div class="dest-card-body">
+                    <h6>Jaipur</h6>
+                    <small>Heritage &amp; Royalty</small>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FEATURED STAYS ═══ -->
+<section th:if="${featuredProperties != null && !featuredProperties.isEmpty()}" class="container pb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-heading mb-1">Featured Stays</h2>
+            <div class="divider"></div>
+        </div>
+        <a th:href="@{/properties}" class="btn-rk-outline btn">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row g-4">
+        <div th:each="p : ${featuredProperties}" class="col-md-4 col-sm-6 fade-in-up">
+            <div class="property-card h-100">
+                <div class="property-card-img">
+                    <a th:href="@{'/properties/' + ${p.id}}">
+                        <img th:src="${p.images != null && !p.images.isEmpty() ? p.images.get(0) : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600'}" alt="Property">
+                    </a>
+                    <span th:if="${p.averageRating > 0}" class="rating-badge">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span th:text="${p.averageRating}">4.5</span>
+                    </span>
+                    <form th:if="${currentUser != null}" th:action="@{'/dashboard/wishlist/toggle/' + ${p.id}}" method="post">
+                        <input type="hidden" name="returnUrl" value="/">
+                        <button type="submit" class="wishlist-heart" th:classappend="${wishlistIds != null && wishlistIds.contains(p.id)} ? 'active' : ''">
+                            <i th:class="${wishlistIds != null && wishlistIds.contains(p.id)} ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="property-card-body">
+                    <a th:href="@{'/properties/' + ${p.id}}" class="text-decoration-none">
+                        <h6 class="property-card-title" th:text="${p.title}">Title</h6>
+                        <p class="property-card-location">
+                            <i class="bi bi-geo-alt-fill text-brand"></i>
+                            <span th:text="${p.city != null ? p.city + ', ' + p.country : p.location}">Location</span>
+                        </p>
+                        <p class="property-card-price">
+                            ₹<span th:text="${#numbers.formatDecimal(p.pricePerNight, 0, 0)}">5000</span>
+                            <span>/ night</span>
+                        </p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ WHY RENTKARO ═══ -->
+<section style="background:#F7F7F7; padding: 4rem 0;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-heading">Why Choose RentKaro?</h2>
+            <p class="section-sub mx-auto" style="max-width:480px;">Trusted by thousands of travellers and hosts across India</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-4 fade-in-up">
+                <div class="stat-card p-4">
+                    <div class="stat-icon red mx-auto mb-3"><i class="bi bi-house-check-fill"></i></div>
+                    <h5 class="fw-bold mb-2">Verified Properties</h5>
+                    <p class="text-muted small mb-0">Every listing is reviewed and approved by our trust &amp; safety team before it goes live.</p>
+                </div>
+            </div>
+            <div class="col-md-4 fade-in-up-1">
+                <div class="stat-card p-4">
+                    <div class="stat-icon green mx-auto mb-3"><i class="bi bi-shield-lock-fill"></i></div>
+                    <h5 class="fw-bold mb-2">Secure Booking</h5>
+                    <p class="text-muted small mb-0">Your payments and personal data are protected with enterprise-grade security.</p>
+                </div>
+            </div>
+            <div class="col-md-4 fade-in-up-2">
+                <div class="stat-card p-4">
+                    <div class="stat-icon blue mx-auto mb-3"><i class="bi bi-headset"></i></div>
+                    <h5 class="fw-bold mb-2">24/7 Support</h5>
+                    <p class="text-muted small mb-0">Our dedicated support team is always ready to assist you with any issue.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ HOST CTA ═══ -->
+<section class="container py-5">
+    <div class="row align-items-center g-5">
+        <div class="col-md-6">
+            <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&h=400&fit=crop" alt="Host your home" class="w-100 rounded-rk shadow-rk">
+        </div>
+        <div class="col-md-6">
+            <span class="rk-badge approved mb-3 d-inline-flex">For Hosts</span>
+            <h2 class="section-heading mb-3">Earn by Sharing Your Space</h2>
+            <p class="text-muted mb-4">List your property on RentKaro and start earning. Join thousands of hosts who trust us to connect them with great guests.</p>
+            <a th:href="@{/register}" class="btn-rk btn me-2">Become a Host</a>
+            <a th:href="@{/properties}" class="btn-rk-outline btn">Explore Stays</a>
+        </div>
+    </div>
+</section>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

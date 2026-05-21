@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="section-heading mb-1">Dashboard</h1>
+            <p class="section-sub">Welcome back, <strong th:text="${currentUserName}">User</strong>!</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:if="${isHost}" th:href="@{/dashboard/add-property}" class="btn-rk btn">
+                <i class="bi bi-plus-lg"></i> Add Property
+            </a>
+            <a th:href="@{/dashboard/profile}" class="btn-rk-outline btn">
+                <i class="bi bi-person"></i> Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 small" role="alert">
+        <i class="bi bi-check-circle me-1"></i> <span th:text="${success}">Success</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 small" role="alert">
+        <i class="bi bi-exclamation-circle me-1"></i> <span th:text="${error}">Error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- HOST STATS -->
+    <div th:if="${isHost}" class="row g-3 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up">
+                <div class="stat-icon red"><i class="bi bi-houses-fill"></i></div>
+                <div class="stat-value" th:text="${totalListings}">0</div>
+                <div class="stat-label">Total Listings</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up-1">
+                <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="stat-value" th:text="${approvedCount}">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up-2">
+                <div class="stat-icon amber"><i class="bi bi-clock-fill"></i></div>
+                <div class="stat-value" th:text="${pendingCount}">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up-3">
+                <div class="stat-icon blue"><i class="bi bi-currency-rupee"></i></div>
+                <div class="stat-value">₹<span th:text="${#numbers.formatDecimal(totalEarnings, 0, 0)}">0</span></div>
+                <div class="stat-label">Total Earnings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="rk-tabs" id="dashTabs">
+        <button class="rk-tab active" onclick="showTab('listings')" th:if="${isHost}">
+            <i class="bi bi-houses me-1"></i> My Listings
+        </button>
+        <button class="rk-tab" th:classappend="${!isHost} ? 'active' : ''" onclick="showTab('upcoming')">
+            <i class="bi bi-calendar-event me-1"></i> Upcoming
+        </button>
+        <button class="rk-tab" onclick="showTab('past')">
+            <i class="bi bi-clock-history me-1"></i> Past
+        </button>
+        <button class="rk-tab" onclick="showTab('guest-bookings')" th:if="${isHost}">
+            <i class="bi bi-inbox me-1"></i> Guest Bookings
+        </button>
+    </div>
+
+    <!-- TAB: MY LISTINGS -->
+    <div class="rk-tab-pane active" id="tab-listings" th:if="${isHost}">
+        <div th:if="${!properties.isEmpty()}" class="rk-table-wrap">
+            <table class="rk-table">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Location</th>
+                        <th>Price / Night</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${properties}">
+                        <td>
+                            <a th:href="@{'/properties/' + ${p.id}}" class="fw-bold text-decoration-none" style="color:inherit;" th:text="${p.title}">Title</a>
+                        </td>
+                        <td th:text="${p.city != null ? p.city : p.location}">Location</td>
+                        <td class="fw-bold">₹<span th:text="${#numbers.formatDecimal(p.pricePerNight, 0, 0)}">0</span></td>
+                        <td>
+                            <span class="rk-badge"
+                                  th:classappend="${p.approvalStatus == 'APPROVED'} ? 'approved' : (${p.approvalStatus == 'PENDING'} ? 'pending' : 'rejected')"
+                                  th:text="${p.approvalStatus}">STATUS</span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a th:href="@{'/dashboard/edit-property/' + ${p.id}}" class="btn btn-sm btn-outline-secondary rounded-2">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{'/dashboard/delete-property/' + ${p.id}}" method="post" class="d-inline" onsubmit="return confirm('Delete this property?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-2"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${properties.isEmpty()}" class="empty-state">
+            <div class="empty-state-icon"><i class="bi bi-house-add"></i></div>
+            <h5>No listings yet</h5>
+            <p>Start earning by adding your first property.</p>
+            <a th:href="@{/dashboard/add-property}" class="btn-rk btn"><i class="bi bi-plus-lg me-1"></i> Add Property</a>
+        </div>
+    </div>
+
+    <!-- TAB: UPCOMING BOOKINGS -->
+    <div class="rk-tab-pane" th:classappend="${!isHost} ? ' active' : ''" id="tab-upcoming">
+        <div th:if="${!upcomingBookings.isEmpty()}" class="rk-table-wrap">
+            <table class="rk-table">
+                <thead>
+                    <tr>
+                        <th>Listing</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Guests</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${upcomingBookings}">
+                        <td><a th:href="@{'/properties/' + ${b.listingId}}" class="fw-bold text-decoration-none" style="color:inherit;" th:text="${b.listingTitle}">Listing</a></td>
+                        <td th:text="${b.checkIn}">Date</td>
+                        <td th:text="${b.checkOut}">Date</td>
+                        <td th:text="${b.numberOfGuests != null ? b.numberOfGuests : '-'}">-</td>
+                        <td class="fw-bold">₹<span th:text="${#numbers.formatDecimal(b.totalPrice, 0, 0)}">0</span></td>
+                        <td>
+                            <span class="rk-badge"
+                                  th:classappend="${b.status == 'CONFIRMED'} ? 'confirmed' : (${b.status == 'PENDING'} ? 'pending' : 'cancelled')"
+                                  th:text="${b.status}">STATUS</span>
+                        </td>
+                        <td>
+                            <form th:if="${b.status == 'PENDING' || b.status == 'CONFIRMED'}"
+                                  th:action="@{'/dashboard/cancel-booking/' + ${b.id}}" method="post"
+                                  onsubmit="return confirm('Cancel this booking?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-2">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${upcomingBookings.isEmpty()}" class="empty-state">
+            <div class="empty-state-icon"><i class="bi bi-calendar-x"></i></div>
+            <h5>No upcoming bookings</h5>
+            <p>Explore properties and plan your next stay!</p>
+            <a th:href="@{/properties}" class="btn-rk btn"><i class="bi bi-search me-1"></i> Browse Properties</a>
+        </div>
+    </div>
+
+    <!-- TAB: PAST BOOKINGS -->
+    <div class="rk-tab-pane" id="tab-past">
+        <div th:if="${!pastBookings.isEmpty()}" class="rk-table-wrap">
+            <table class="rk-table">
+                <thead>
+                    <tr>
+                        <th>Listing</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Review</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${pastBookings}">
+                        <td><a th:href="@{'/properties/' + ${b.listingId}}" class="fw-bold text-decoration-none" style="color:inherit;" th:text="${b.listingTitle}">Listing</a></td>
+                        <td th:text="${b.checkIn}">Date</td>
+                        <td th:text="${b.checkOut}">Date</td>
+                        <td class="fw-bold">₹<span th:text="${#numbers.formatDecimal(b.totalPrice, 0, 0)}">0</span></td>
+                        <td>
+                            <span class="rk-badge"
+                                  th:classappend="${b.status == 'COMPLETED'} ? 'completed' : (${b.status == 'CONFIRMED'} ? 'confirmed' : 'cancelled')"
+                                  th:text="${b.status}">STATUS</span>
+                        </td>
+                        <td>
+                            <a th:if="${b.status == 'COMPLETED'}" th:href="@{'/properties/' + ${b.listingId}}" class="btn btn-sm btn-outline-primary rounded-2">
+                                <i class="bi bi-pencil-square me-1"></i>Review
+                            </a>
+                            <span th:if="${b.status != 'COMPLETED'}" class="text-muted small fst-italic">Awaiting completion</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${pastBookings.isEmpty()}" class="empty-state">
+            <div class="empty-state-icon"><i class="bi bi-clock-history"></i></div>
+            <h5>No past bookings</h5>
+            <p>Your completed trips will appear here.</p>
+        </div>
+    </div>
+
+    <!-- TAB: GUEST BOOKINGS (HOST only) -->
+    <div class="rk-tab-pane" id="tab-guest-bookings" th:if="${isHost}">
+        <div th:if="${!hostBookings.isEmpty()}" class="rk-table-wrap">
+            <table class="rk-table">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Guest</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${hostBookings}">
+                        <td><a th:href="@{'/properties/' + ${b.listingId}}" class="fw-bold text-decoration-none" style="color:inherit;" th:text="${b.listingTitle}">Listing</a></td>
+                        <td th:text="${b.guestName}">Guest</td>
+                        <td th:text="${b.checkIn}">Date</td>
+                        <td th:text="${b.checkOut}">Date</td>
+                        <td class="fw-bold">₹<span th:text="${#numbers.formatDecimal(b.totalPrice, 0, 0)}">0</span></td>
+                        <td>
+                            <span class="rk-badge"
+                                  th:classappend="${b.status == 'CONFIRMED'} ? 'confirmed' : (${b.status == 'PENDING'} ? 'pending' : (${b.status == 'COMPLETED'} ? 'completed' : 'cancelled'))"
+                                  th:text="${b.status}">STATUS</span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <form th:if="${b.status == 'PENDING'}" th:action="@{'/dashboard/confirm-booking/' + ${b.id}}" method="post">
+                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-2">
+                                        <i class="bi bi-check-lg"></i> Confirm
+                                    </button>
+                                </form>
+                                <form th:if="${b.status == 'CONFIRMED'}" th:action="@{'/dashboard/complete-booking/' + ${b.id}}" method="post"
+                                      onsubmit="return confirm('Mark as completed?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-info rounded-2">
+                                        <i class="bi bi-check2-all"></i> Complete
+                                    </button>
+                                </form>
+                                <form th:if="${b.status == 'PENDING' || b.status == 'CONFIRMED'}"
+                                      th:action="@{'/dashboard/cancel-booking/' + ${b.id}}" method="post"
+                                      onsubmit="return confirm('Cancel?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-2">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </form>
+                                <span th:if="${b.status == 'CANCELLED' || b.status == 'COMPLETED'}" class="text-muted small fst-italic" th:text="${b.status}">—</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${hostBookings.isEmpty()}" class="empty-state">
+            <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+            <h5>No guest bookings yet</h5>
+            <p>Bookings on your properties will appear here.</p>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+// Determine initial active tab
+(function() {
+    const isHost = /*[[${isHost}]]*/ false;
+    if (!isHost) {
+        document.getElementById('tab-listings') && (document.getElementById('tab-listings').classList.remove('active'));
+        document.getElementById('tab-upcoming').classList.add('active');
+    }
+})();
+
+function showTab(name) {
+    document.querySelectorAll('.rk-tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.rk-tab').forEach(t => t.classList.remove('active'));
+    const pane = document.getElementById('tab-' + name);
+    if (pane) pane.classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>

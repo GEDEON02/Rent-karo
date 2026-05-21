@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('My Profile')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="mb-4">
+                <h1 class="section-heading mb-1">My Profile</h1>
+                <p class="section-sub">Manage your account details</p>
+            </div>
+
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 small">
+                <i class="bi bi-check-circle me-1"></i><span th:text="${success}">Success</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 small">
+                <i class="bi bi-exclamation-circle me-1"></i><span th:text="${error}">Error</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="row g-4">
+                <!-- Profile Card -->
+                <div class="col-md-3">
+                    <div class="card-rk text-center">
+                        <div class="mx-auto mb-3 rounded-circle overflow-hidden"
+                             style="width:90px;height:90px;background:#EBEBEB;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1);">
+                            <img th:if="${user.profilePicture != null && !user.profilePicture.isEmpty()}"
+                                 th:src="${user.profilePicture}" style="width:100%;height:100%;object-fit:cover;" alt="Profile">
+                            <div th:if="${user.profilePicture == null || user.profilePicture.isEmpty()}"
+                                 class="d-flex align-items-center justify-content-center h-100">
+                                <i class="bi bi-person-fill" style="font-size:2.5rem;color:#ccc;"></i>
+                            </div>
+                        </div>
+                        <h6 class="fw-bold mb-1" th:text="${user.name}">Name</h6>
+                        <p class="text-muted small mb-2" th:text="${user.email}">email</p>
+                        <span class="rk-badge mb-2"
+                              th:classappend="${user.role == 'ADMIN'} ? 'rejected' : (${user.role == 'HOST'} ? 'confirmed' : 'approved')"
+                              th:text="${user.role}">ROLE</span>
+                        <div class="text-muted small mt-2">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            Member since
+                            <span th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'MMM yyyy') : 'N/A'}">2024</span>
+                        </div>
+                        <div class="mt-2">
+                            <span th:if="${user.isVerified != null && user.isVerified}" class="rk-badge approved">
+                                <i class="bi bi-patch-check me-1"></i>Verified
+                            </span>
+                            <span th:if="${user.isVerified == null || !user.isVerified}" class="rk-badge pending">
+                                <i class="bi bi-clock me-1"></i>Unverified
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Forms -->
+                <div class="col-md-9">
+                    <!-- Edit Profile -->
+                    <div class="card-rk mb-4">
+                        <h5 class="fw-bold mb-4">Edit Profile</h5>
+                        <form th:action="@{/dashboard/profile}" method="post">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-rk">Full Name</label>
+                                    <div class="input-wrap">
+                                        <i class="bi bi-person input-icon"></i>
+                                        <input type="text" name="name" class="form-control-rk" th:value="${user.name}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-rk">Email</label>
+                                    <div class="input-wrap">
+                                        <i class="bi bi-envelope input-icon"></i>
+                                        <input type="email" class="form-control-rk" th:value="${user.email}" disabled style="background:#F7F7F7;cursor:not-allowed;">
+                                    </div>
+                                    <small class="text-muted" style="font-size:.78rem;">Email cannot be changed</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-rk">Phone</label>
+                                    <div class="input-wrap">
+                                        <i class="bi bi-telephone input-icon"></i>
+                                        <input type="text" name="phone" class="form-control-rk" th:value="${user.phone}" placeholder="+91-XXXXXXXXXX">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-rk">Profile Picture URL</label>
+                                    <div class="input-wrap">
+                                        <i class="bi bi-image input-icon"></i>
+                                        <input type="url" name="profilePicture" class="form-control-rk" th:value="${user.profilePicture}" placeholder="https://...">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn-rk btn">
+                                        <i class="bi bi-check-lg me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Change Password -->
+                    <div class="card-rk">
+                        <h5 class="fw-bold mb-4">Change Password</h5>
+                        <form th:action="@{/dashboard/profile/password}" method="post">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-rk">Current Password</label>
+                                    <div class="input-wrap">
+                                        <i class="bi bi-lock input-icon"></i>
+                                        <input type="password" name="currentPassword" id="curPw" class="form-control-rk" required>
+                                        <button type="button" class="toggle-pw" onclick="togglePw('curPw',this)"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-rk">New Password</label>
+                                    <div class="input-wrap">
+                                        <i class="bi bi-lock-fill input-icon"></i>
+                                        <input type="password" name="newPassword" id="newPw" class="form-control-rk" required minlength="6">
+                                        <button type="button" class="toggle-pw" onclick="togglePw('newPw',this)"><i class="bi bi-eye"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn-rk-outline btn">
+                                        <i class="bi bi-shield-lock me-1"></i> Update Password
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    const icon = btn.querySelector('i');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    icon.className = input.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+</script>
+</body>
+</html>

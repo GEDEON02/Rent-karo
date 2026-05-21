@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Explore Properties')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-5">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="section-heading mb-1">Explore Properties</h1>
+        <p class="section-sub">Discover amazing stays across India</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar mb-4">
+        <form th:action="@{/properties}" method="get">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label-rk">City</label>
+                    <input type="text" name="city" class="form-control" style="border-radius:8px;"
+                           placeholder="e.g. Goa" th:value="${param.city}">
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="form-label-rk">Min Price (₹)</label>
+                    <input type="number" name="priceMin" class="form-control" style="border-radius:8px;"
+                           placeholder="0" th:value="${param.priceMin}">
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="form-label-rk">Max Price (₹)</label>
+                    <input type="number" name="priceMax" class="form-control" style="border-radius:8px;"
+                           placeholder="Any" th:value="${param.priceMax}">
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label-rk">Guests</label>
+                    <input type="number" name="guests" class="form-control" style="border-radius:8px;"
+                           placeholder="Any" min="1" th:value="${param.guests}">
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <button type="submit" class="btn-rk btn w-100">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+                <div class="col-md-1 col-sm-6">
+                    <a th:href="@{/properties}" class="btn-rk-ghost btn w-100" title="Clear filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Count -->
+    <p class="text-muted small mb-3" th:if="${!properties.isEmpty()}">
+        Showing <strong th:text="${properties.size()}">0</strong> properties
+    </p>
+
+    <!-- Property Grid -->
+    <div class="row g-4">
+        <div th:each="p, iter : ${properties}" class="col-md-4 col-sm-6"
+             th:style="'animation-delay:' + ${iter.index * 60} + 'ms'" style="animation: fadeInUp .5s ease-out both;">
+            <div class="property-card h-100">
+                <div class="property-card-img">
+                    <a th:href="@{'/properties/' + ${p.id}}">
+                        <img th:src="${p.images != null && !p.images.isEmpty() ? p.images.get(0) : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600'}"
+                             alt="Property">
+                    </a>
+                    <!-- Rating -->
+                    <span th:if="${p.averageRating > 0}" class="rating-badge">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span th:text="${p.averageRating}">4.5</span>
+                    </span>
+                    <!-- Wishlist -->
+                    <form th:if="${currentUser != null}" th:action="@{'/dashboard/wishlist/toggle/' + ${p.id}}" method="post">
+                        <input type="hidden" name="returnUrl" value="/properties">
+                        <button type="submit" class="wishlist-heart"
+                                th:classappend="${wishlistIds != null && wishlistIds.contains(p.id)} ? 'active' : ''">
+                            <i th:class="${wishlistIds != null && wishlistIds.contains(p.id)} ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="property-card-body">
+                    <a th:href="@{'/properties/' + ${p.id}}" class="text-decoration-none">
+                        <h6 class="property-card-title" th:text="${p.title}">Title</h6>
+                        <p class="property-card-location">
+                            <i class="bi bi-geo-alt-fill text-brand"></i>
+                            <span th:text="${p.city != null ? p.city + ', ' + p.country : p.location}">Location</span>
+                        </p>
+                        <p class="property-card-meta">
+                            <span th:if="${p.maxGuests != null}"><i class="bi bi-people"></i> <span th:text="${p.maxGuests}">4</span> guests</span>
+                            <span th:if="${p.numBedrooms != null}" class="ms-2"><i class="bi bi-door-open"></i> <span th:text="${p.numBedrooms}">2</span> bed</span>
+                        </p>
+                        <p class="property-card-price">
+                            ₹<span th:text="${#numbers.formatDecimal(p.pricePerNight, 0, 0)}">5000</span>
+                            <span>/ night</span>
+                        </p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${properties.isEmpty()}" class="col-12">
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="bi bi-house-slash"></i></div>
+                <h5>No properties found</h5>
+                <p>Try adjusting your search filters</p>
+                <a th:href="@{/properties}" class="btn-rk btn">Clear Filters</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

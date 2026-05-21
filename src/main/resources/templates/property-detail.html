@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Property Detail')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-5">
+    <!-- Photo Grid -->
+    <div class="row g-2 mb-4">
+        <div class="col-md-8" style="position:relative;">
+            <img th:src="${property.images != null && !property.images.isEmpty() ? property.images.get(0) : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800'}"
+                 class="w-100 rounded-rk" style="height:430px;object-fit:cover;" alt="Main photo">
+            <form th:if="${currentUser != null}" th:action="@{'/dashboard/wishlist/toggle/' + ${property.id}}" method="post"
+                  style="position:absolute;top:16px;right:16px;">
+                <input type="hidden" name="returnUrl" th:value="@{'/properties/' + ${property.id}}">
+                <button type="submit" class="wishlist-heart" style="width:40px;height:40px;font-size:1.1rem;"
+                        th:classappend="${isWishlisted} ? 'active' : ''">
+                    <i th:class="${isWishlisted} ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <img th:src="${property.images != null && property.images.size() > 1 ? property.images.get(1) : 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400'}"
+                 class="w-100 rounded-rk" style="height:430px;object-fit:cover;" alt="Secondary photo">
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- ═══ MAIN INFO ═══ -->
+        <div class="col-md-7">
+            <!-- Title & location -->
+            <h1 class="section-heading mb-1" th:text="${property.title}">Title</h1>
+            <p class="text-muted mb-3">
+                <i class="bi bi-geo-alt-fill text-brand me-1"></i>
+                <span th:text="${property.city != null ? property.city + ', ' + property.country : property.location}">Location</span>
+            </p>
+
+            <!-- Meta chips -->
+            <div class="d-flex flex-wrap gap-3 mb-4">
+                <span th:if="${property.maxGuests != null}" class="amenity-chip">
+                    <i class="bi bi-people-fill text-brand"></i> <span th:text="${property.maxGuests}">4</span> guests
+                </span>
+                <span th:if="${property.numBedrooms != null}" class="amenity-chip">
+                    <i class="bi bi-door-open-fill text-brand"></i> <span th:text="${property.numBedrooms}">2</span> bedrooms
+                </span>
+                <span th:if="${property.numBathrooms != null}" class="amenity-chip">
+                    <i class="bi bi-droplet-fill text-brand"></i> <span th:text="${property.numBathrooms}">1</span> bathrooms
+                </span>
+            </div>
+
+            <!-- Host info -->
+            <div class="d-flex align-items-center gap-3 p-3 mb-4 rounded-rk" style="background:#F7F7F7;border:1px solid #EBEBEB;">
+                <div class="d-flex align-items-center justify-content-center rounded-circle bg-white border shadow-sm"
+                     style="width:52px;height:52px;font-size:1.5rem;color:#717171;flex-shrink:0;">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div>
+                    <p class="mb-0 fw-bold">Hosted by <span th:text="${property.hostName}">Host</span></p>
+                    <small class="text-muted" th:text="${property.hostEmail}">email</small>
+                </div>
+            </div>
+
+            <hr class="my-4" style="border-color:#EBEBEB;">
+
+            <!-- Description -->
+            <h5 class="fw-bold mb-2">About this place</h5>
+            <p class="text-muted" style="line-height:1.8;" th:text="${property.description}">Description</p>
+
+            <!-- Amenities -->
+            <div th:if="${property.amenities != null && !property.amenities.isEmpty()}" class="mt-4">
+                <h5 class="fw-bold mb-3">Amenities</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <span th:each="amenity : ${property.amenities}" class="amenity-chip">
+                        <i class="bi bi-check-circle-fill text-brand"></i>
+                        <span th:text="${amenity}">Amenity</span>
+                    </span>
+                </div>
+            </div>
+
+            <hr class="my-4" style="border-color:#EBEBEB;">
+
+            <!-- Reviews -->
+            <div>
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-star-fill text-warning me-1"></i>
+                    <span th:text="${property.averageRating}">0</span>
+                    &nbsp;·&nbsp;
+                    <span th:text="${property.reviewCount}">0</span> reviews
+                </h5>
+                <div th:if="${reviews != null && !reviews.isEmpty()}">
+                    <div th:each="review : ${reviews}" class="review-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="reviewer-avatar"><i class="bi bi-person"></i></div>
+                            <div>
+                                <div class="fw-bold small" th:text="${review.guestName}">Guest</div>
+                                <div class="stars-display">
+                                    <i th:each="i : ${#numbers.sequence(1, review.rating)}" class="bi bi-star-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mb-0 text-muted small" th:text="${review.comment}">Comment</p>
+                    </div>
+                </div>
+                <p th:if="${reviews == null || reviews.isEmpty()}" class="text-muted small">No reviews yet. Be the first!</p>
+
+                <!-- Write review form -->
+                <div th:if="${canReview != null && canReview}" class="card-rk mt-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-pencil-square me-1 text-brand"></i> Write a Review</h6>
+                    <form th:action="@{'/properties/' + ${property.id} + '/review'}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label-rk">Your Rating</label>
+                            <div class="d-flex gap-1" id="star-rating">
+                                <input type="hidden" name="rating" id="rating-value" value="5">
+                                <i class="bi bi-star-fill text-warning fs-4" style="cursor:pointer;" th:each="n : ${#numbers.sequence(1,5)}" th:data-value="${n}" th:onclick="'setRating(' + ${n} + ')'"></i>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-rk">Your Review</label>
+                            <textarea name="comment" class="form-control-rk" rows="3"
+                                      required minlength="5" maxlength="500" placeholder="Share your experience..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-rk btn"><i class="bi bi-send me-1"></i> Submit Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ BOOKING CARD ═══ -->
+        <div class="col-md-5">
+            <div class="booking-card">
+                <div class="d-flex align-items-baseline gap-2 mb-2">
+                    <span class="booking-price">₹<span th:text="${#numbers.formatDecimal(property.pricePerNight, 0, 0)}">5000</span></span>
+                    <span class="text-muted">/ night</span>
+                </div>
+                <div th:if="${property.averageRating > 0}" class="mb-3 small">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    <strong th:text="${property.averageRating}">4.5</strong>
+                    <span class="text-muted ms-1">(<span th:text="${property.reviewCount}">10</span> reviews)</span>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-3">
+                    <span class="rk-badge"
+                          th:classappend="${property.approvalStatus == 'APPROVED'} ? 'approved' : (${property.approvalStatus == 'PENDING'} ? 'pending' : 'rejected')"
+                          th:text="${property.approvalStatus}">STATUS</span>
+                </div>
+
+                <!-- Alerts -->
+                <div th:if="${bookingError}" class="alert alert-danger py-2 small rounded-3">
+                    <i class="bi bi-exclamation-circle me-1"></i><span th:text="${bookingError}">Error</span>
+                </div>
+                <div th:if="${bookingSuccess}" class="alert alert-success py-2 small rounded-3">
+                    <i class="bi bi-check-circle me-1"></i><span th:text="${bookingSuccess}">Success</span>
+                </div>
+
+                <!-- Booking Form -->
+                <div th:if="${currentUser != null && property.hostEmail != currentUser && !isAdmin}">
+                    <form th:action="@{'/properties/' + ${property.id} + '/book'}" method="post">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label-rk">Check-in</label>
+                                <input type="date" name="checkIn" class="form-control-rk" required id="checkin-date">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-rk">Check-out</label>
+                                <input type="date" name="checkOut" class="form-control-rk" required id="checkout-date">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-rk">Guests</label>
+                            <input type="number" name="guests" class="form-control-rk" min="1"
+                                   th:max="${property.maxGuests != null ? property.maxGuests : 10}" value="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-rk">Payment Method</label>
+                            <select name="paymentMethod" class="form-select rounded-3" style="border:1.5px solid #EBEBEB;font-size:.9rem;padding:.65rem;">
+                                <option value="CARD">Credit / Debit Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="NET_BANKING">Net Banking</option>
+                            </select>
+                        </div>
+                        <div class="price-breakdown mb-3">
+                            <div class="price-row">
+                                <span class="text-muted">Price per night</span>
+                                <span>₹<span th:text="${#numbers.formatDecimal(property.pricePerNight, 0, 0)}">5000</span></span>
+                            </div>
+                            <div class="price-row" style="color:#00A699;font-weight:600;">
+                                <span>Advance due now (25%)</span>
+                                <span>Auto-calculated</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-rk btn w-100 btn-lg">
+                            <i class="bi bi-calendar-check me-1"></i> Reserve &amp; Pay 25% Advance
+                        </button>
+                    </form>
+                </div>
+
+                <div th:if="${currentUser != null && property.hostEmail == currentUser}" class="text-center py-3 text-muted small">
+                    <i class="bi bi-house-fill me-1"></i> This is your property
+                </div>
+                <div th:if="${isAdmin}" class="text-center py-2 text-muted small">
+                    <i class="bi bi-shield-lock me-1"></i> Viewing as Admin
+                </div>
+                <div th:if="${currentUser == null}" class="mt-2">
+                    <a class="btn-rk btn w-100 btn-lg" th:href="@{/login}">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Log in to book
+                    </a>
+                </div>
+
+                <!-- Admin Actions -->
+                <div th:if="${isAdmin}" class="mt-4 pt-3" style="border-top:1px solid #EBEBEB;">
+                    <h6 class="fw-bold mb-3 text-danger"><i class="bi bi-shield-lock me-1"></i> Admin Actions</h6>
+                    <div class="d-grid gap-2">
+                        <form th:action="@{'/admin/approve-property/' + ${property.id}}" method="post">
+                            <button type="submit" class="btn btn-success w-100 rounded-3" th:disabled="${property.approvalStatus == 'APPROVED'}">
+                                <i class="bi bi-check-circle me-1"></i> Approve
+                            </button>
+                        </form>
+                        <form th:action="@{'/admin/reject-property/' + ${property.id}}" method="post">
+                            <button type="submit" class="btn btn-warning w-100 rounded-3" th:disabled="${property.approvalStatus == 'REJECTED'}">
+                                <i class="bi bi-x-circle me-1"></i> Reject
+                            </button>
+                        </form>
+                        <form th:action="@{'/admin/delete-property/' + ${property.id}}" method="post" onsubmit="return confirm('Permanently delete?')">
+                            <button type="submit" class="btn btn-danger w-100 rounded-3">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                        <a th:href="@{/admin/listings}" class="btn btn-outline-secondary w-100 rounded-3">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Listings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+const today = new Date().toISOString().split('T')[0];
+const ci = document.getElementById('checkin-date');
+const co = document.getElementById('checkout-date');
+if (ci) { ci.min = today; ci.addEventListener('change', () => { if(co) co.min = ci.value; }); }
+if (co) co.min = today;
+
+function setRating(val) {
+    document.getElementById('rating-value').value = val;
+    document.querySelectorAll('#star-rating i').forEach((s, i) => {
+        s.className = i < val ? 'bi bi-star-fill text-warning fs-4' : 'bi bi-star text-muted fs-4';
+        s.style.cursor = 'pointer';
+    });
+}
+</script>
+</body>
+</html>

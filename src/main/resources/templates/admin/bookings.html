@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin - Bookings')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between mb-4"><h3 class="fw-bold"><i class="bi bi-calendar-check me-2"></i>Bookings Management</h3><a th:href="@{/admin}" class="btn btn-outline-secondary btn-sm">← Back</a></div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div class="table-responsive"><table class="table table-hover align-middle">
+        <thead class="table-light"><tr><th>Listing</th><th>Guest</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Total</th><th>Advance</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody><tr th:each="b : ${bookings}">
+            <td class="fw-medium"><a th:href="@{'/properties/' + ${b.listingId}}" class="text-decoration-none text-dark fw-bold" th:text="${b.listingTitle}">Listing</a></td>
+            <td><span th:text="${b.guestName}">Guest</span><br><small class="text-muted" th:text="${b.guestEmail}">email</small></td>
+            <td th:text="${b.checkIn}">Date</td><td th:text="${b.checkOut}">Date</td>
+            <td th:text="${b.numberOfGuests != null ? b.numberOfGuests : '-'}">-</td>
+            <td>₹<span th:text="${#numbers.formatDecimal(b.totalPrice, 0, 0)}">0</span></td>
+            <td th:if="${b.advanceAmount != null}">₹<span th:text="${#numbers.formatDecimal(b.advanceAmount, 0, 0)}">0</span></td>
+            <td th:if="${b.advanceAmount == null}">-</td>
+            <td><span class="badge rounded-pill" th:classappend="${b.status == 'CONFIRMED'} ? 'bg-success' : (${b.status == 'PENDING'} ? 'bg-warning text-dark' : (${b.status == 'COMPLETED'} ? 'bg-info' : 'bg-danger'))" th:text="${b.status}">STATUS</span></td>
+            <td>
+                <form th:if="${b.status == 'PENDING' || b.status == 'CONFIRMED'}" th:action="@{'/admin/cancel-booking/' + ${b.id}}" method="post" class="d-inline" onsubmit="return confirm('Cancel this booking?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle me-1"></i>Cancel</button>
+                </form>
+                <span th:if="${b.status == 'CANCELLED'}" class="text-muted small">Cancelled</span>
+                <span th:if="${b.status == 'COMPLETED'}" class="text-muted small">Completed</span>
+            </td>
+        </tr></tbody>
+    </table></div>
+    <div th:if="${bookings.isEmpty()}" class="text-center py-5">
+        <i class="bi bi-calendar-x" style="font-size:3rem;color:#ddd;"></i>
+        <h5 class="mt-3 text-muted">No bookings yet</h5>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

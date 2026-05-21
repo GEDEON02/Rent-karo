@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-5">
+    <div class="d-flex align-items-center gap-3 mb-5">
+        <div class="stat-icon red" style="width:52px;height:52px;border-radius:14px;flex-shrink:0;">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <div>
+            <h1 class="section-heading mb-0">Admin Dashboard</h1>
+            <p class="section-sub mb-0">Platform overview and management</p>
+        </div>
+    </div>
+
+    <!-- Primary Stats -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up">
+                <div class="stat-icon red"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value" th:text="${totalUsers}">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up-1">
+                <div class="stat-icon blue"><i class="bi bi-houses-fill"></i></div>
+                <div class="stat-value" th:text="${totalListings}">0</div>
+                <div class="stat-label">Total Listings</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up-2">
+                <div class="stat-icon green"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="stat-value" th:text="${totalBookings}">0</div>
+                <div class="stat-label">Total Bookings</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card fade-in-up-3">
+                <div class="stat-icon amber"><i class="bi bi-currency-rupee"></i></div>
+                <div class="stat-value">₹<span th:text="${#numbers.formatDecimal(totalRevenue, 0, 0)}">0</span></div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Stats breakdowns -->
+        <div class="col-lg-8">
+            <!-- Users by role -->
+            <div class="card-rk mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-people me-2 text-brand"></i>Users by Role</h5>
+                <div class="row g-3 text-center">
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background:#F7F7F7;border:1px solid #EBEBEB;">
+                            <div style="font-size:1.5rem;color:#717171;" class="mb-1"><i class="bi bi-person"></i></div>
+                            <h4 class="fw-bold mb-0" th:text="${guestCount}">0</h4>
+                            <small class="text-muted">Guests</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background:#eff6ff;border:1px solid #dbeafe;">
+                            <div style="font-size:1.5rem;color:#3B82F6;" class="mb-1"><i class="bi bi-house-door"></i></div>
+                            <h4 class="fw-bold mb-0" th:text="${hostCount}">0</h4>
+                            <small class="text-muted">Hosts</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background:#fff0f3;border:1px solid #fecdd3;">
+                            <div style="font-size:1.5rem;" class="mb-1 text-brand"><i class="bi bi-shield-check"></i></div>
+                            <h4 class="fw-bold mb-0" th:text="${adminCount}">0</h4>
+                            <small class="text-muted">Admins</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Properties by status -->
+            <div class="card-rk mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-houses me-2 text-brand"></i>Properties by Status</h5>
+                <div class="row g-3 text-center">
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background:#fff8e1;border:1px solid #fde68a;">
+                            <h4 class="fw-bold mb-0 text-warning" th:text="${pendingProperties}">0</h4>
+                            <small class="text-muted">Pending Review</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background:#e8f8f5;border:1px solid #a7f3d0;">
+                            <h4 class="fw-bold mb-0" style="color:#00A699;" th:text="${approvedProperties}">0</h4>
+                            <small class="text-muted">Approved</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 rounded-3" style="background:#fff0f3;border:1px solid #fecdd3;">
+                            <h4 class="fw-bold mb-0 text-brand" th:text="${rejectedProperties}">0</h4>
+                            <small class="text-muted">Rejected</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings by status -->
+            <div class="card-rk">
+                <h5 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2 text-brand"></i>Bookings by Status</h5>
+                <div class="row g-3 text-center">
+                    <div class="col-3">
+                        <div class="p-3 rounded-3" style="background:#fff8e1;border:1px solid #fde68a;">
+                            <h4 class="fw-bold mb-0 text-warning" th:text="${pendingBookings}">0</h4>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-3 rounded-3" style="background:#eff6ff;border:1px solid #dbeafe;">
+                            <h4 class="fw-bold mb-0" style="color:#3B82F6;" th:text="${confirmedBookings}">0</h4>
+                            <small class="text-muted">Confirmed</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-3 rounded-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                            <h4 class="fw-bold mb-0" style="color:#16A34A;" th:text="${completedBookings}">0</h4>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-3 rounded-3" style="background:#F7F7F7;border:1px solid #EBEBEB;">
+                            <h4 class="fw-bold mb-0 text-muted" th:text="${cancelledBookings}">0</h4>
+                            <small class="text-muted">Cancelled</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Quick actions + Recent users -->
+        <div class="col-lg-4">
+            <div class="card-rk mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge-fill me-2 text-brand"></i>Quick Actions</h5>
+                <a th:href="@{/admin/users}" class="admin-quick-btn">
+                    <div class="aqi" style="background:#eff6ff;color:#3B82F6;"><i class="bi bi-people"></i></div>
+                    Manage Users
+                </a>
+                <a th:href="@{/admin/listings}" class="admin-quick-btn">
+                    <div class="aqi" style="background:#fff8e1;color:#D97706;"><i class="bi bi-houses"></i></div>
+                    Manage Listings
+                    <span th:if="${pendingProperties > 0}" class="rk-badge pending ms-auto" th:text="${pendingProperties}">0</span>
+                </a>
+                <a th:href="@{/admin/bookings}" class="admin-quick-btn">
+                    <div class="aqi" style="background:#f0fdf4;color:#16A34A;"><i class="bi bi-calendar-check"></i></div>
+                    View Bookings
+                </a>
+                <a th:href="@{/admin/reviews}" class="admin-quick-btn">
+                    <div class="aqi" style="background:#fff0f3;color:#FF385C;"><i class="bi bi-star"></i></div>
+                    Manage Reviews
+                </a>
+                <a th:href="@{/admin/payments}" class="admin-quick-btn">
+                    <div class="aqi" style="background:#F7F7F7;color:#717171;"><i class="bi bi-credit-card"></i></div>
+                    View Payments
+                </a>
+            </div>
+
+            <div class="card-rk">
+                <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-brand"></i>Recent Users</h5>
+                <div th:each="u : ${recentUsers}" class="d-flex align-items-center gap-2 py-2" style="border-bottom:1px solid #F7F7F7;">
+                    <div class="reviewer-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div class="flex-grow-1 min-w-0">
+                        <p class="mb-0 fw-bold small text-truncate" th:text="${u.name}">Name</p>
+                        <small class="text-muted text-truncate d-block" th:text="${u.email}">email</small>
+                    </div>
+                    <span class="rk-badge"
+                          th:classappend="${u.role == 'ADMIN'} ? 'rejected' : (${u.role == 'HOST'} ? 'confirmed' : 'approved')"
+                          th:text="${u.role}">ROLE</span>
+                </div>
+                <div th:if="${recentUsers.isEmpty()}" class="text-muted small text-center py-3">No users yet</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

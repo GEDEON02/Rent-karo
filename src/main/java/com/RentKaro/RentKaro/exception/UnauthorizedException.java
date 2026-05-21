@@ -1,0 +1,8 @@
+package com.RentKaro.RentKaro.exception;
+
+public class UnauthorizedException extends RuntimeException {
+
+    public UnauthorizedException(String message) {
+        super(message);
+    }
+}

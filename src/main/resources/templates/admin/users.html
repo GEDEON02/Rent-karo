@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin - Users')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between mb-4"><h3 class="fw-bold"><i class="bi bi-people me-2"></i>Users Management</h3><a th:href="@{/admin}" class="btn btn-outline-secondary btn-sm">← Back</a></div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    <div class="table-responsive"><table class="table table-hover align-middle">
+        <thead class="table-light"><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody><tr th:each="u : ${users}">
+            <td class="fw-medium" th:text="${u.name}">Name</td><td th:text="${u.email}">email</td>
+            <td><span class="badge" th:classappend="${u.role == 'ADMIN'} ? 'bg-danger' : (${u.role == 'HOST'} ? 'bg-primary' : 'bg-secondary')" th:text="${u.role}">ROLE</span></td>
+            <td><span class="badge" th:classappend="${u.isBanned != null && u.isBanned} ? 'bg-danger' : 'bg-success'" th:text="${u.isBanned != null && u.isBanned} ? 'Banned' : 'Active'">Active</span></td>
+            <td th:text="${u.createdAt != null ? #temporals.format(u.createdAt, 'dd MMM yyyy') : 'N/A'}">Date</td>
+            <td><div class="d-flex gap-1 flex-wrap">
+                <form th:if="${u.isBanned == null || !u.isBanned}" th:action="@{'/admin/ban-user/' + ${u.id}}" method="post" class="d-inline"><button class="btn btn-sm btn-outline-warning" type="submit">Ban</button></form>
+                <form th:if="${u.isBanned != null && u.isBanned}" th:action="@{'/admin/unban-user/' + ${u.id}}" method="post" class="d-inline"><button class="btn btn-sm btn-outline-success" type="submit">Unban</button></form>
+                <form th:action="@{'/admin/change-role/' + ${u.id}}" method="post" class="d-inline"><select name="role" class="form-select form-select-sm d-inline" style="width:auto;" onchange="this.form.submit()"><option value="" disabled selected>Role</option><option value="GUEST">Guest</option><option value="HOST">Host</option><option value="ADMIN">Admin</option></select></form>
+                <form th:action="@{'/admin/delete-user/' + ${u.id}}" method="post" class="d-inline" onsubmit="return confirm('Delete user permanently?')"><button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button></form>
+            </div></td>
+        </tr></tbody>
+    </table></div>
+    <div th:if="${users == null || users.isEmpty()}" class="text-center py-5">
+        <i class="bi bi-people" style="font-size:3rem;color:#ddd;"></i>
+        <h5 class="mt-3 text-muted">No users found</h5>
+    </div>
+</div>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
